@@ -1,0 +1,41 @@
+Change log
+
+---------------------------------------------------------------------------------------------------
+Version: 0.2.3
+- minor bugs fixed
+
+---------------------------------------------------------------------------------------------------
+Version: 0.2.2
+- Disable escort by one more right click on battleship 
+
+---------------------------------------------------------------------------------------------------
+Version: 0.2.1
+- Patrol boats can escort Battleships, following them with full weapons ready to fire even while moving
+
+---------------------------------------------------------------------------------------------------
+Version: 0.2.0
+- Battleship can be placed independent (not on waterways only)
+---------------------------------------------------------------------------------------------------
+Version: 0.1.9
+- fixes
+---------------------------------------------------------------------------------------------------
+Version: 0.1.8
+- Battleship autotargetiing and shooting on stop. 
+---------------------------------------------------------------------------------------------------
+Version: 0.1.8
+- fix for pelagos compabiolity
+- fix for battleship creat without turrets 
+---------------------------------------------------------------------------------------------------
+Version: 0.1.7
+- fix for battleship creat without turrets 
+- fix for patrol boat load atomic bomb -but onyl one a time...
+---------------------------------------------------------------------------------------------------
+Version: 0.1.6
+- bugfixes 
+---------------------------------------------------------------------------------------------------
+Version: 0.1.5 
+- custom mod settings added, like speed, radar range, patrol boat missile range multiplayer.
+---------------------------------------------------------------------------------------------------
+Version: 0.1.4
+- add Patrol boat . All battleships and patrol boats acts as radar .
+---------------------------------------------------------------------------------------------------

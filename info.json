@@ -1,0 +1,12 @@
+{
+  "name": "Battleship",
+  "version": "0.2.3",
+  "title": "Cargo Ships: Battleships & Patrol Boats",
+  "author": "peterwolf_pl",
+  "description": "Battleship beta submod for cargo ships. Adds artillery turret to cargo ships - creating Battleships. Missel turret on the boat - creating Partol Boat. Own graphics coming soon. ",
+  "factorio_version": "2.0",
+  "dependencies": [
+    "cargo-ships >= 1.0.28",
+    "cargo-ships-graphics"
+  ]
+}

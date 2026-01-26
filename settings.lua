@@ -1,0 +1,61 @@
+data:extend({
+  {
+  {
+    type = "bool-setting",
+    name = "battleship-debug",
+    setting_type = "runtime-per-user",
+    default_value = false,
+    order = "a"
+  },
+  {
+    type = "bool-setting",
+    name = "battleship-debug-global",
+    setting_type = "runtime-global",
+    default_value = false,
+    order = "b"
+  },
+    type = "double-setting",
+    name = "battleship-speed-multiplier",
+    setting_type = "startup",
+    default_value = 1,
+    minimum_value = 0.1,
+    maximum_value = 5,
+    order = "a[battleship]-a[speed]",
+  },
+  {
+    type = "double-setting",
+    name = "patrol-boat-speed-multiplier",
+    setting_type = "startup",
+    default_value = 1,
+    minimum_value = 0.1,
+    maximum_value = 5,
+    order = "b[patrol-boat]-a[speed]",
+  },
+  {
+    type = "double-setting",
+    name = "patrol-boat-missile-range-multiplier",
+    setting_type = "startup",
+    default_value = 3,
+    minimum_value = 0.1,
+    maximum_value = 10,
+    order = "b[patrol-boat]-b[missile-range]",
+  },
+  {
+    type = "double-setting",
+    name = "battleship-radar-range",
+    setting_type = "runtime-global",
+    default_value = 342,
+    minimum_value = 0,
+    maximum_value = 1000,
+    order = "a[battleship]-b[radar-range]",
+  },
+  {
+    type = "double-setting",
+    name = "patrol-boat-radar-range",
+    setting_type = "runtime-global",
+    default_value = 342,
+    minimum_value = 0,
+    maximum_value = 1000,
+    order = "b[patrol-boat]-c[radar-range]",
+  },
+})
