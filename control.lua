@@ -43,7 +43,7 @@ local function dbg(msg, player_index)
   if game and game.print then game.print(msg) end
 end
 
-local BATTLESHIP_NTH_TICK = 2
+local BATTLESHIP_NTH_TICK = 5
 local BATTLESHIP_NAME = "battleship"
 local INDEP_BATTLESHIP_NAME = "indep-battleship"
 local PATROL_BOAT_NAME = "patrol-boat"
@@ -56,9 +56,9 @@ local PATROL_FOLLOW_MIN_DISTANCE = 10
 local PATROL_FOLLOW_MAX_DISTANCE = 30
 local PATROL_FOLLOW_STEP = 0.6
 
-local ESCORT_UPDATE_TICKS = 5
+local ESCORT_UPDATE_TICKS = 15
 
-local RADAR_CHART_TICKS = 60
+local RADAR_CHART_TICKS = 180
 
 -- Movement detection tuning
 -- cargo-ships can report tiny speed jitter around 0, so we use hysteresis + debounce.
@@ -87,7 +87,7 @@ local function is_ship_name(name)
 end
 
 -- How often we do an expensive fallback scan for ships that were created without build events.
-local FALLBACK_SCAN_TICKS = 300 -- every 5 seconds
+local FALLBACK_SCAN_TICKS = 600 -- every 10 seconds
 
 local turret_names = {
   "battleship-cannon-1",
@@ -137,6 +137,7 @@ local function ensure_globals()
   storage.patrol_boats = storage.patrol_boats or {}
   storage.patrol_selections = storage.patrol_selections or {}
   storage.escort = storage.escort or {boats = {}, targets = {}}
+  storage.scan_state = storage.scan_state or {surface_index = 1, deep_counter = 0}
 end
 
 local function register_ships()
@@ -166,6 +167,7 @@ local function register_ships()
 end
 
 local init_existing
+local fallback_scan_step
 local is_stopped
 
 -- Post-load initialization: on_load cannot safely use game state for scanning.
@@ -944,9 +946,9 @@ local function on_nth_tick()
   ensure_globals()
 
   -- Fallback scan: cargo-ships/pelagos may create/replace ships via script without build events.
-  -- Scan once per second to attach turrets to any missing ships.
+  -- Scan periodically to attach turrets to any missing ships.
   if (game.tick % FALLBACK_SCAN_TICKS) == 0 then
-    init_existing()
+    fallback_scan_step()
   end
 
   if storage.battleships then
@@ -1033,20 +1035,19 @@ local function on_removed(event)
   end
 end
 
-init_existing = function()
-  ensure_globals()
+local function scan_surface(surface, do_fallback)
   local found = 0
   local accepted = 0
 
-  for _, surface in pairs(game.surfaces) do
-    -- Fast path: exact names
-    local ships_exact = surface.find_entities_filtered{name = {BATTLESHIP_NAME, INDEP_BATTLESHIP_NAME, PATROL_BOAT_NAME, INDEP_PATROL_BOAT_NAME}}
-    for _, ship in pairs(ships_exact) do
-      found = found + 1
-      ensure_entry(ship)
-      accepted = accepted + 1
-    end
+  -- Fast path: exact names
+  local ships_exact = surface.find_entities_filtered{name = {BATTLESHIP_NAME, INDEP_BATTLESHIP_NAME, PATROL_BOAT_NAME, INDEP_PATROL_BOAT_NAME}}
+  for _, ship in pairs(ships_exact) do
+    found = found + 1
+    ensure_entry(ship)
+    accepted = accepted + 1
+  end
 
+  if do_fallback then
     -- Fallback path: scan common rolling-stock types and accept by substring.
     -- This catches cases where another mod renames the rolling stock prototypes.
     local candidates = surface.find_entities_filtered{type = {"cargo-wagon", "car", "locomotive"}}
@@ -1057,6 +1058,50 @@ init_existing = function()
         accepted = accepted + 1
       end
     end
+  end
+
+  return found, accepted
+end
+
+fallback_scan_step = function()
+  ensure_globals()
+  if not (game and game.surfaces) then
+    return
+  end
+
+  storage.scan_state = storage.scan_state or {surface_index = 1, deep_counter = 0}
+  local surfaces = game.surfaces
+  local surface_count = #surfaces
+  if surface_count == 0 then
+    return
+  end
+
+  local index = storage.scan_state.surface_index or 1
+  if index > surface_count then
+    index = 1
+  end
+
+  storage.scan_state.surface_index = index + 1
+  storage.scan_state.deep_counter = (storage.scan_state.deep_counter or 0) + 1
+  local do_fallback = storage.scan_state.deep_counter >= 5
+  if do_fallback then
+    storage.scan_state.deep_counter = 0
+  end
+
+  local surface = surfaces[index]
+  local found, accepted = scan_surface(surface, do_fallback)
+  dbg("[Battleship] fallback scan surface=" .. tostring(surface.name) .. " found=" .. tostring(found) .. " ensured=" .. tostring(accepted))
+end
+
+init_existing = function()
+  ensure_globals()
+  local found = 0
+  local accepted = 0
+
+  for _, surface in pairs(game.surfaces) do
+    local surface_found, surface_accepted = scan_surface(surface, true)
+    found = found + surface_found
+    accepted = accepted + surface_accepted
   end
 
   dbg("[Battleship] init_existing scan done found=" .. tostring(found) .. " ensured=" .. tostring(accepted))
