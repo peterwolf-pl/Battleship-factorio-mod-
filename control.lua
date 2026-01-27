@@ -167,6 +167,7 @@ local function register_ships()
 end
 
 local init_existing
+local fallback_scan_step
 local is_stopped
 
 -- Post-load initialization: on_load cannot safely use game state for scanning.
@@ -1062,7 +1063,7 @@ local function scan_surface(surface, do_fallback)
   return found, accepted
 end
 
-local function fallback_scan_step()
+fallback_scan_step = function()
   ensure_globals()
   if not (game and game.surfaces) then
     return
