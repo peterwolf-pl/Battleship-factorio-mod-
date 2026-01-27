@@ -468,24 +468,36 @@ local function refill_battleship_ammo(entry)
     return
   end
 
-  -- Priority order for ammo types
-  local ammo_types = {"atomic-bomb", "artillery-shell", "explosive-cannon-shell", "uranium-cannon-shell"}
+  local ammo_candidates = {}
+  local contents = cargo_inventory.get_contents()
+  for name, count in pairs(contents) do
+    local item_name = name
+    local item_count = count
+    if type(count) == "table" then
+      item_name = count.name or name
+      item_count = count.count or count.amount or 0
+    end
+    if item_name and item_count > 0 then
+      table.insert(ammo_candidates, {name = item_name, count = item_count})
+    end
+  end
+
+  if #ammo_candidates == 0 then
+    return
+  end
   
   for _, turret in pairs(entry.turrets or {}) do
     if turret and turret.valid then
       local ammo_inventory = turret.get_inventory(defines.inventory.artillery_turret_ammo)
       if ammo_inventory and ammo_inventory.is_empty() then
-        -- Try each ammo type in priority order
-        for _, ammo_name in ipairs(ammo_types) do
-          -- Try to insert just 1 to test, then insert rest
+        for _, ammo in ipairs(ammo_candidates) do
           local ok, inserted = pcall(function()
-            return ammo_inventory.insert{name = ammo_name, count = 1}
+            return ammo_inventory.insert{name = ammo.name, count = ammo.count}
           end)
-          
+
           if ok and inserted and inserted > 0 then
-            -- This ammo type works, remove it from cargo
             pcall(function()
-              cargo_inventory.remove{name = ammo_name, count = inserted}
+              cargo_inventory.remove{name = ammo.name, count = inserted}
             end)
             break
           end
