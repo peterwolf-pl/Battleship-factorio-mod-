@@ -57,6 +57,8 @@ local PATROL_FOLLOW_MAX_DISTANCE = 30
 local PATROL_FOLLOW_STEP = 0.6
 
 local ESCORT_UPDATE_TICKS = 15
+local ESCORT_MIN_SEPARATION_TILES = 4
+local ESCORT_AVOID_STRENGTH = 2.5
 
 local RADAR_CHART_TICKS = 180
 
@@ -1000,6 +1002,31 @@ local function on_nth_tick()
             x = target.position.x + rotated.x,
             y = target.position.y + rotated.y
           }
+          local avoid = {x = 0, y = 0}
+          local target_entry = storage.escort.targets and storage.escort.targets[data.target]
+          if target_entry and target_entry.boats then
+            for other_unit, _ in pairs(target_entry.boats) do
+              if other_unit ~= boat_unit then
+                local other = get_ship_by_unit(other_unit, false)
+                if other and other.valid then
+                  local sep_dx = boat.position.x - other.position.x
+                  local sep_dy = boat.position.y - other.position.y
+                  local sep_dist_sq = sep_dx * sep_dx + sep_dy * sep_dy
+                  local min_sep_sq = ESCORT_MIN_SEPARATION_TILES * ESCORT_MIN_SEPARATION_TILES
+                  if sep_dist_sq > 0 and sep_dist_sq < min_sep_sq then
+                    local sep_dist = math.sqrt(sep_dist_sq)
+                    local push = (ESCORT_MIN_SEPARATION_TILES - sep_dist) / ESCORT_MIN_SEPARATION_TILES
+                    avoid.x = avoid.x + (sep_dx / sep_dist) * push
+                    avoid.y = avoid.y + (sep_dy / sep_dist) * push
+                  end
+                end
+              end
+            end
+          end
+          if avoid.x ~= 0 or avoid.y ~= 0 then
+            desired.x = desired.x + avoid.x * ESCORT_AVOID_STRENGTH
+            desired.y = desired.y + avoid.y * ESCORT_AVOID_STRENGTH
+          end
 
           local dx = desired.x - boat.position.x
           local dy = desired.y - boat.position.y
