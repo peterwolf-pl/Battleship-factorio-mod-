@@ -1,3 +1,16 @@
+
+Battleship Cargo Ship Mod for Factorio
+=====================================
+
+submod for gr8 Factorio Mod - Cargo Ships by 
+
+adds artillery turret to cargo ships - creating Battleship.
+adds missile turret to boat - creating Patrol Boat.
+
+
+
+https://mods.factorio.com/mod/Battleship
+
 FAQ - Battleship Cargo Ship Mod for Factorio
 =========================
 
