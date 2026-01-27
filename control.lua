@@ -469,11 +469,18 @@ local function refill_battleship_ammo(entry)
   end
 
   local ammo_candidates = {}
-  for name, count in pairs(cargo_inventory.get_contents()) do
-    if count > 0 then
-      local proto = game.item_prototypes[name]
+  local contents = cargo_inventory.get_contents()
+  for name, count in pairs(contents) do
+    local item_name = name
+    local item_count = count
+    if type(count) == "table" then
+      item_name = count.name or name
+      item_count = count.count or count.amount or 0
+    end
+    if item_name and item_count > 0 then
+      local proto = game.item_prototypes[item_name]
       if proto and proto.type == "ammo" and proto.ammo_type and proto.ammo_type.category == "artillery-shell" then
-        table.insert(ammo_candidates, {name = name, count = count})
+        table.insert(ammo_candidates, {name = item_name, count = item_count})
       end
     end
   end
