@@ -1063,6 +1063,9 @@ local function on_removed(event)
 end
 
 local function scan_surface(surface, do_fallback)
+  if not (surface and surface.valid) then
+    return 0, 0
+  end
   local found = 0
   local accepted = 0
 
@@ -1116,6 +1119,10 @@ fallback_scan_step = function()
   end
 
   local surface = surfaces[index]
+  if not (surface and surface.valid) then
+    dbg("[Battleship] fallback scan surface invalid at index=" .. tostring(index))
+    return
+  end
   local found, accepted = scan_surface(surface, do_fallback)
   dbg("[Battleship] fallback scan surface=" .. tostring(surface.name) .. " found=" .. tostring(found) .. " ensured=" .. tostring(accepted))
 end
