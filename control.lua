@@ -172,16 +172,6 @@ local init_existing
 local fallback_scan_step
 local is_stopped
 
--- Post-load initialization: on_load cannot safely use game state for scanning.
--- We schedule a one-time scan on the next tick after a save is loaded.
-local function post_load_init()
-  ensure_globals()
-  init_existing()
-  dbg("[Battleship] post_load_init finished")
-  -- run once
-  script.on_nth_tick(1, nil)
-end
-
 local function create_turret(ship, turret_name, offset)
   local function snap05(v)
     return math.floor(v * 2 + 0.5) / 2
@@ -1178,7 +1168,5 @@ end)
 
 script.on_load(function()
   dbg("[Battleship] on_load")
-  init_events()
-  -- schedule scan on the next tick after loading a save
-  script.on_nth_tick(1, post_load_init)
+  -- Avoid changing event registrations on load; handlers are restored from the save.
 end)
