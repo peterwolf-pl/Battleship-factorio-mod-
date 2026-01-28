@@ -396,8 +396,8 @@ end
 local function normalize_offset(dx, dy, desired_distance)
   local distance = math.sqrt(dx * dx + dy * dy)
   if distance < 0.001 then
-    local angle = math.random() * 2 * math.pi
-    return {x = math.cos(angle) * desired_distance, y = math.sin(angle) * desired_distance}, desired_distance
+    -- Use a deterministic fallback to avoid multiplayer desync from RNG.
+    return {x = desired_distance, y = 0}, desired_distance
   end
   local scale = desired_distance / distance
   return {x = dx * scale, y = dy * scale}, distance
