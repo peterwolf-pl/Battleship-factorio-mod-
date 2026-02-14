@@ -32,6 +32,171 @@ local battleship_speed_multiplier = settings.startup["battleship-speed-multiplie
 local patrol_boat_speed_multiplier = settings.startup["patrol-boat-speed-multiplier"].value
 local patrol_boat_missile_range_multiplier = settings.startup["patrol-boat-missile-range-multiplier"].value
 
+
+-- ---------------------------------------------------------------------------
+-- Make the Patrol Boat missile turret fully invisible (graphics only).
+-- Keep ALL shooting logic untouched; we only strip renderable pictures/animations.
+-- This is required because the turret entity is created/respawned at runtime.
+-- ---------------------------------------------------------------------------
+local function make_empty_rotated_animation()
+  return {
+    filename = "__core__/graphics/empty.png",
+    width = 1,
+    height = 1,
+    frame_count = 1,
+    direction_count = 1,
+    line_length = 1,
+    animation_speed = 1
+  }
+end
+
+local function make_empty_rotated_sprite()
+  return {
+    filename = "__core__/graphics/empty.png",
+    width = 1,
+    height = 1,
+    direction_count = 1
+  }
+end
+
+local function strip_turret_graphics(turret)
+  if not turret then return end
+  -- Common turret fields (optional depending on base prototype)
+  if turret.folded_animation ~= nil then turret.folded_animation = make_empty_rotated_animation() end
+  if turret.preparing_animation ~= nil then turret.preparing_animation = make_empty_rotated_animation() end
+  if turret.prepared_animation ~= nil then turret.prepared_animation = make_empty_rotated_animation() end
+  if turret.attacking_animation ~= nil then turret.attacking_animation = make_empty_rotated_animation() end
+  if turret.starting_attack_animation ~= nil then turret.starting_attack_animation = make_empty_rotated_animation() end
+  if turret.ending_attack_animation ~= nil then turret.ending_attack_animation = make_empty_rotated_animation() end
+
+  if turret.base_picture ~= nil then turret.base_picture = make_empty_rotated_sprite() end
+  if turret.base_picture_render_layer ~= nil then turret.base_picture_render_layer = "object" end
+
+  -- Some turret prototypes embed animation on attack_parameters; strip if present.
+  if type(turret.attack_parameters) == "table" and turret.attack_parameters.animation ~= nil then
+    turret.attack_parameters.animation = nil
+  end
+
+  -- Hide from encyclopaedia/blueprints; entity can still exist and shoot.
+  turret.hidden = true
+  turret.hidden_in_factoriopedia = true
+  turret.selectable_in_game = false
+end
+
+-- Optional custom Patrol Boat graphics (Battleship-graphics mod)
+local function get_patrolboat_sprite_prefix()
+  -- Try a few likely mod names, keep it defensive.
+  if mods and (mods["Battleship-graphics"] or mods["Battleship_graphics"] or mods["battleship-graphics"] or mods["battleship_graphics"]) then
+    local mod_name = mods["Battleship-graphics"] and "Battleship-graphics"
+      or (mods["Battleship_graphics"] and "Battleship_graphics")
+      or (mods["battleship-graphics"] and "battleship-graphics")
+      or "battleship_graphics"
+    return "__" .. mod_name .. "__/graphics/patrolboat/"
+  end
+  return nil
+end
+
+local function build_patrolboat_filenames(prefix)
+  if not prefix then return nil end
+  local t = {}
+  for i = 1, 256 do
+    t[#t+1] = prefix .. string.format("%04d.png", i)
+  end
+  return t
+end
+
+local function try_apply_patrolboat_graphics(target)
+  if not target then return end
+  local prefix = get_patrolboat_sprite_prefix()
+  local filenames = build_patrolboat_filenames(prefix)
+  if not filenames then return end
+
+  local function make_new_sprite(old)
+    if type(old) ~= "table" then return nil end
+    local s = table.deepcopy(old)
+
+    -- Switch to per-direction files (0001..0256).
+    s.filename = nil
+    s.filenames = filenames
+    s.lines_per_file = 1
+    s.line_length = 1
+    s.frame_count = 1
+    s.direction_count = 256
+
+    -- Battleship-graphics patrolboat frames are 474x458.        @#$@#$@##@$@#$@#$@#$@#$@#$@#$@#$@#$@#$@#$@#$@$
+    s.width = 474
+    s.height = 458
+    -- s.scale = 1
+    -- Prevent HR mismatch / missing files.
+    s.hr_version = nil
+
+    -- Atlas/stripe-only fields don't apply for per-file directions.
+    s.slice = nil
+    s.stripes = nil
+
+    return s
+  end
+
+  local function patch_layers(layers)
+    if type(layers) ~= "table" then return end
+    for i = 1, #layers do
+      local layer = layers[i]
+      if type(layer) == "table" then
+        if layer.draw_as_shadow then
+          layer.scale = 0.4
+          -- Custom patrolboat sprites are shorter than the original boat graphics,
+          -- so the inherited shadow often ends up too far away. Nudge it closer.    $%$%$%$%$%$%$%$%$%$%$%$%$%$%$%$%$%$%$%$%$$%$%$%$%$%$%$%$%$
+          local adj_x, adj_y = 0 , -0.5
+          if type(layer.shift) == "table" and type(layer.shift[1]) == "number" and type(layer.shift[2]) == "number" then
+            layer.shift = {layer.shift[1] + adj_x, layer.shift[2] + adj_y}
+          else
+            layer.shift = {adj_x, adj_y}
+          end
+        else
+          -- Replace only visible sprite layers.
+          local new_layer = make_new_sprite(layer)
+          if new_layer then
+            layers[i] = new_layer
+          end
+        end
+      end
+    end
+  end
+
+  local function patch_container(container)
+    if type(container) ~= "table" then return end
+
+    -- Layered sprite container
+    if container.layers and type(container.layers) == "table" then
+      patch_layers(container.layers)
+      return
+    end
+
+    -- Direct sprite definition (no layers)
+    if container.filename or container.filenames then
+      local new_self = make_new_sprite(container)
+      if new_self then
+        for k in pairs(container) do container[k] = nil end
+        for k,v in pairs(new_self) do container[k] = v end
+      end
+      return
+    end
+  end
+
+  -- cargo-wagon variant
+  if target.pictures then
+    if target.pictures.rotated then
+      patch_container(target.pictures.rotated)
+    end
+    patch_container(target.pictures)
+  end
+
+  -- car variant
+  if target.animation then
+    patch_container(target.animation)
+  end
+end
+
 -- Battleship - version that works on rails (cargo-wagon variant, looks like cargo_ship)
 local battleship = table.deepcopy(cargo_ship)
 battleship.name = "battleship"
@@ -90,7 +255,7 @@ artillery_base.energy_source = {
   usage_priority = "secondary-input"
 }
 artillery_base.max_health = 1200
-artillery_base.minable = nil
+artillery_base.minable = {mining_time = 20, result = "artillery-turret"}
 
 -- IMPORTANT: zero-sized boxes often make create_entity fail on modded water/ship tiles.
 -- Use tiny boxes instead.
@@ -132,6 +297,8 @@ if patrol_boat.max_speed then
   patrol_boat.max_speed = patrol_boat.max_speed * patrol_boat_speed_multiplier
 end
 
+try_apply_patrolboat_graphics(patrol_boat)
+
 local indep_boat = data.raw["car"]["indep-boat"]
 local indep_patrol_boat = table.deepcopy(indep_boat)
 indep_patrol_boat.name = "indep-patrol-boat"
@@ -145,6 +312,8 @@ indep_patrol_boat.localised_description = {"entity-description.patrol-boat"}
 if indep_patrol_boat.max_speed then
   indep_patrol_boat.max_speed = indep_patrol_boat.max_speed * patrol_boat_speed_multiplier
 end
+
+try_apply_patrolboat_graphics(indep_patrol_boat)
 
 local missile_turret = table.deepcopy(data.raw["ammo-turret"]["gun-turret"])
 local rocket_launcher = data.raw["gun"]["rocket-launcher"]
@@ -173,6 +342,8 @@ missile_turret.order = "z[patrol-boat-missile-turret]"
 missile_turret.attack_parameters.ammo_category = "rocket"
 missile_turret.attack_parameters.range = rocket_launcher_range * patrol_boat_missile_range_multiplier
 missile_turret.attack_parameters.cooldown = rocket_launcher_cooldown
+strip_turret_graphics(missile_turret)
+
 
 data:extend{
   battleship,

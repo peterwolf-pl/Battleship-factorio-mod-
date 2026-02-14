@@ -1,41 +1,125 @@
-Change log
+---------------------------------------------------------------------------------------------------
+Version: 0.3.14
+Date: 09. 02. 2026
+  Bugfixes:
+    - turret is now minable for bob's mods 
+
+---------------------------------------------------------------------------------------------------
+Version: 0.3.13
+Date: 09. 02. 2026
+  Bugfixes:
+    - battleship graphics fixes 
+  
+
+
+---------------------------------------------------------------------------------------------------
+Version: 0.3.12
+Date: 07. 02. 2026
+  Bugfixes:
+    - patrol_boat graphics fixes 
+    - Patrol boat missile turret is now fully invisible (graphics stripped) for all variants, including waterways.
+
+
+
+---------------------------------------------------------------------------------------------------
+Version: 0.3.11
+Date: 02. 02. 2026
+  Bugfixes:
+    - changelog
+
+---------------------------------------------------------------------------------------------------
+Version: 0.3.1
+  Graphics:
+    - Fixed Patrol Boat custom sprite size to match Battleship-graphics patrol boat frames (474x458).
+    - Added support for custom Patrol Boat graphics from optional dependency "Battleship-graphics" (256-direction sprites).
+    - Ensured Patrol Boat graphics override replaces all visible animation layers while keeping shadows.
+    - Adjusted Patrol Boat shadow offset for Battleship-graphics sprites.
+
+---------------------------------------------------------------------------------------------------
+Version: 0.3.0
+  Translation:
+    - Added translations for Russian, French, and Portuguese (Brazil).
+
+---------------------------------------------------------------------------------------------------
+Version: 0.2.9
+  Translation:
+    - Added translations for Spanish, Italian, German, and Chinese.
+
+---------------------------------------------------------------------------------------------------
+Version: 0.2.8
+  Bugfixes:
+    - Fixed minor bugs.
+
+---------------------------------------------------------------------------------------------------
+Version: 0.2.7
+  Bugfixes:
+    - Fixed multiplayer issues.
+
+---------------------------------------------------------------------------------------------------
+Version: 0.2.6
+  Bugfixes:
+    - Fixed escort distance behavior.
+
+---------------------------------------------------------------------------------------------------
+Version: 0.2.5
+  Bugfixes:
+    - Fixed game lag issues.
+
+---------------------------------------------------------------------------------------------------
+Version: 0.2.4
+  Bugfixes:
+    - Fixed Battleship accepting all artillery ammo including Atomic Artillery.
 
 ---------------------------------------------------------------------------------------------------
 Version: 0.2.3
-- minor bugs fixed
+  Features:
+    - Battleship now accepts all artillery ammo including Atomic Artillery.
 
 ---------------------------------------------------------------------------------------------------
 Version: 0.2.2
-- Disable escort by one more right click on battleship 
+  Control:
+    - Escort can now be disabled by right-clicking the Battleship again.
 
 ---------------------------------------------------------------------------------------------------
 Version: 0.2.1
-- Patrol boats can escort Battleships, following them with full weapons ready to fire even while moving
+  Features:
+    - Patrol Boats can escort Battleships and follow them with weapons ready, even while moving.
 
 ---------------------------------------------------------------------------------------------------
 Version: 0.2.0
-- Battleship can be placed independent (not on waterways only)
+  Features:
+    - Battleship can now be placed independently, not only on waterways.
+
 ---------------------------------------------------------------------------------------------------
 Version: 0.1.9
-- fixes
+  Bugfixes:
+    - General fixes.
+
 ---------------------------------------------------------------------------------------------------
 Version: 0.1.8
-- Battleship autotargetiing and shooting on stop. 
----------------------------------------------------------------------------------------------------
-Version: 0.1.8
-- fix for pelagos compabiolity
-- fix for battleship creat without turrets 
+  Bugfixes:
+    - Fixed Battleship auto-targeting and shooting when stopped.
+    - Fixed Pelagos compatibility.
+    - Fixed Battleship creation without turrets.
+
 ---------------------------------------------------------------------------------------------------
 Version: 0.1.7
-- fix for battleship creat without turrets 
-- fix for patrol boat load atomic bomb -but onyl one a time...
+  Bugfixes:
+    - Fixed Battleship creation without turrets.
+    - Fixed Patrol Boat loading atomic bombs (limited to one at a time).
+
 ---------------------------------------------------------------------------------------------------
 Version: 0.1.6
-- bugfixes 
+  Bugfixes:
+    - General bug fixes.
+
 ---------------------------------------------------------------------------------------------------
-Version: 0.1.5 
-- custom mod settings added, like speed, radar range, patrol boat missile range multiplayer.
+Version: 0.1.5
+  Features:
+    - Added custom mod settings such as speed, radar range, patrol boat missile range, and multiplayer options.
+
 ---------------------------------------------------------------------------------------------------
 Version: 0.1.4
-- add Patrol boat . All battleships and patrol boats acts as radar .
----------------------------------------------------------------------------------------------------
+  Features:
+    - Added Patrol Boat.
+    - Battleships and Patrol Boats now act as radar.
