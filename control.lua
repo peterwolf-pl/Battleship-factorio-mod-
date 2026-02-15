@@ -59,6 +59,8 @@ local PATROL_FOLLOW_STEP = 0.6
 local ESCORT_UPDATE_TICKS = 15
 local ESCORT_MIN_SEPARATION_TILES = 4
 local ESCORT_AVOID_STRENGTH = 2.5
+local BATTLESHIP_AMMO_REFILL_TICKS = 60
+local PATROL_AMMO_REFILL_TICKS = 30
 
 local RADAR_CHART_TICKS = 180
 
@@ -461,6 +463,12 @@ local function refill_battleship_ammo(entry)
     return
   end
 
+  entry.last_ammo_refill_tick = entry.last_ammo_refill_tick or 0
+  if (game.tick - entry.last_ammo_refill_tick) < BATTLESHIP_AMMO_REFILL_TICKS then
+    return
+  end
+  entry.last_ammo_refill_tick = game.tick
+
   local cargo_inventory
   if ship.type == "car" then
     cargo_inventory = ship.get_inventory(defines.inventory.car_trunk)
@@ -524,8 +532,31 @@ local function sync_patrol_turret(entry)
   end
 
   if turret and turret.valid then
-    local offset = rotate_offset(patrol_turret_offsets[1], ship.orientation)
-    turret.teleport({ship.position.x + offset.x, ship.position.y + offset.y})
+    entry._last_ship_x = entry._last_ship_x or ship.position.x
+    entry._last_ship_y = entry._last_ship_y or ship.position.y
+    entry._last_ship_orientation = entry._last_ship_orientation or ship.orientation
+
+    local dxs = ship.position.x - entry._last_ship_x
+    local dys = ship.position.y - entry._last_ship_y
+    local dor = ship.orientation - entry._last_ship_orientation
+    local ship_moved = (dxs*dxs + dys*dys) > 1e-6 or math.abs(dor) > 1e-6
+
+    if ship_moved then
+      entry._last_ship_x = ship.position.x
+      entry._last_ship_y = ship.position.y
+      entry._last_ship_orientation = ship.orientation
+
+      local offset = rotate_offset(patrol_turret_offsets[1], ship.orientation)
+      local target_x = ship.position.x + offset.x
+      local target_y = ship.position.y + offset.y
+      local tp = turret.position
+      local dxt = target_x - tp.x
+      local dyt = target_y - tp.y
+      if (dxt*dxt + dyt*dyt) > 1e-6 then
+        turret.teleport({target_x, target_y})
+      end
+    end
+
     turret.force = ship.force
   end
 end
@@ -536,6 +567,12 @@ local function refill_patrol_ammo(entry)
   if not (ship and ship.valid) then
     return
   end
+
+  entry.last_ammo_refill_tick = entry.last_ammo_refill_tick or 0
+  if (game.tick - entry.last_ammo_refill_tick) < PATROL_AMMO_REFILL_TICKS then
+    return
+  end
+  entry.last_ammo_refill_tick = game.tick
 
   local turret = entry.turret
   if not (turret and turret.valid) then
