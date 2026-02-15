@@ -59,8 +59,12 @@ local PATROL_FOLLOW_STEP = 0.6
 local ESCORT_UPDATE_TICKS = 15
 local ESCORT_MIN_SEPARATION_TILES = 4
 local ESCORT_AVOID_STRENGTH = 2.5
+local BATTLESHIP_AMMO_REFILL_TICKS = 60
+local PATROL_AMMO_REFILL_TICKS = 30
 
 local RADAR_CHART_TICKS = 180
+local RADAR_MIN_MOVE_FOR_RECHART = 4
+local FORCE_SYNC_TICKS = 300
 
 -- Movement detection tuning
 -- cargo-ships can report tiny speed jitter around 0, so we use hysteresis + debounce.
@@ -89,7 +93,7 @@ local function is_ship_name(name)
 end
 
 -- How often we do an expensive fallback scan for ships that were created without build events.
-local FALLBACK_SCAN_TICKS = 600 -- every 10 seconds
+local FALLBACK_SCAN_TICKS = 1800 -- every 30 seconds
 
 local turret_names = {
   "battleship-cannon-1",
@@ -331,6 +335,22 @@ local function sync_battleship_turrets(entry)
     entry._last_ship_orientation = ship.orientation
   end
 
+  local all_valid = true
+  for index = 1, #turret_offsets do
+    local turret = entry.turrets[index]
+    if not (turret and turret.valid) then
+      all_valid = false
+      break
+    end
+  end
+
+  if (not ship_moved) and all_valid then
+    entry._last_force_sync_tick = entry._last_force_sync_tick or 0
+    if (game.tick - entry._last_force_sync_tick) < FORCE_SYNC_TICKS then
+      return
+    end
+  end
+
   for index = 1, #turret_offsets do
     local turret = entry.turrets[index]
     if not (turret and turret.valid) then
@@ -342,17 +362,15 @@ local function sync_battleship_turrets(entry)
     end
 
     if turret and turret.valid then
-      local function snap05(v)
-        return math.floor(v * 2 + 0.5) / 2
-      end
+      if ship_moved or (not all_valid) then
+        local function snap05(v)
+          return math.floor(v * 2 + 0.5) / 2
+        end
 
-      local offset = rotate_offset(turret_offsets[index], ship.orientation)
-      local target_x = snap05(ship.position.x + offset.x)
-      local target_y = snap05(ship.position.y + offset.y)
+        local offset = rotate_offset(turret_offsets[index], ship.orientation)
+        local target_x = snap05(ship.position.x + offset.x)
+        local target_y = snap05(ship.position.y + offset.y)
 
-      -- Avoid teleporting every update tick - it can reset artillery targeting.
-      -- Only move turrets when the ship actually moved or rotated.
-      if ship_moved then
         local tp = turret.position
         local dxt = target_x - tp.x
         local dyt = target_y - tp.y
@@ -361,8 +379,14 @@ local function sync_battleship_turrets(entry)
         end
       end
 
-      turret.force = ship.force
+      if ship_moved or (not all_valid) or (not entry._last_force_sync_tick) or ((game.tick - entry._last_force_sync_tick) >= FORCE_SYNC_TICKS) then
+        turret.force = ship.force
+      end
     end
+  end
+
+  if ship_moved or (not all_valid) or (not entry._last_force_sync_tick) or ((game.tick - entry._last_force_sync_tick) >= FORCE_SYNC_TICKS) then
+    entry._last_force_sync_tick = game.tick
   end
 end
 
@@ -382,11 +406,21 @@ local function chart_ship_area(entry)
   end
 
   local position = ship.position
+  if entry.last_chart_position then
+    local dx = position.x - entry.last_chart_position.x
+    local dy = position.y - entry.last_chart_position.y
+    if (dx * dx + dy * dy) < (RADAR_MIN_MOVE_FOR_RECHART * RADAR_MIN_MOVE_FOR_RECHART) then
+      entry.last_chart_tick = game.tick
+      return
+    end
+  end
+
   ship.force.chart(ship.surface, {
     {position.x - range, position.y - range},
     {position.x + range, position.y + range},
   })
   entry.last_chart_tick = game.tick
+  entry.last_chart_position = {x = position.x, y = position.y}
 end
 
 local function clamp(value, min_value, max_value)
@@ -461,6 +495,12 @@ local function refill_battleship_ammo(entry)
     return
   end
 
+  entry.last_ammo_refill_tick = entry.last_ammo_refill_tick or 0
+  if (game.tick - entry.last_ammo_refill_tick) < BATTLESHIP_AMMO_REFILL_TICKS then
+    return
+  end
+  entry.last_ammo_refill_tick = game.tick
+
   local cargo_inventory
   if ship.type == "car" then
     cargo_inventory = ship.get_inventory(defines.inventory.car_trunk)
@@ -524,8 +564,31 @@ local function sync_patrol_turret(entry)
   end
 
   if turret and turret.valid then
-    local offset = rotate_offset(patrol_turret_offsets[1], ship.orientation)
-    turret.teleport({ship.position.x + offset.x, ship.position.y + offset.y})
+    entry._last_ship_x = entry._last_ship_x or ship.position.x
+    entry._last_ship_y = entry._last_ship_y or ship.position.y
+    entry._last_ship_orientation = entry._last_ship_orientation or ship.orientation
+
+    local dxs = ship.position.x - entry._last_ship_x
+    local dys = ship.position.y - entry._last_ship_y
+    local dor = ship.orientation - entry._last_ship_orientation
+    local ship_moved = (dxs*dxs + dys*dys) > 1e-6 or math.abs(dor) > 1e-6
+
+    if ship_moved then
+      entry._last_ship_x = ship.position.x
+      entry._last_ship_y = ship.position.y
+      entry._last_ship_orientation = ship.orientation
+
+      local offset = rotate_offset(patrol_turret_offsets[1], ship.orientation)
+      local target_x = ship.position.x + offset.x
+      local target_y = ship.position.y + offset.y
+      local tp = turret.position
+      local dxt = target_x - tp.x
+      local dyt = target_y - tp.y
+      if (dxt*dxt + dyt*dyt) > 1e-6 then
+        turret.teleport({target_x, target_y})
+      end
+    end
+
     turret.force = ship.force
   end
 end
@@ -536,6 +599,12 @@ local function refill_patrol_ammo(entry)
   if not (ship and ship.valid) then
     return
   end
+
+  entry.last_ammo_refill_tick = entry.last_ammo_refill_tick or 0
+  if (game.tick - entry.last_ammo_refill_tick) < PATROL_AMMO_REFILL_TICKS then
+    return
+  end
+  entry.last_ammo_refill_tick = game.tick
 
   local turret = entry.turret
   if not (turret and turret.valid) then
