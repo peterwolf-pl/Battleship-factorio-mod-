@@ -94,6 +94,8 @@ end
 
 -- How often we do an expensive fallback scan for ships that were created without build events.
 local FALLBACK_SCAN_TICKS = 1800 -- every 30 seconds
+local CONVERSION_RESCAN_DELAYS = {10, 30, 90} -- ticks after build to catch cargo-ships replacement
+local CONVERSION_RESCAN_RADIUS = 12
 
 local turret_names = {
   "battleship-cannon-1",
@@ -144,6 +146,7 @@ local function ensure_globals()
   storage.patrol_selections = storage.patrol_selections or {}
   storage.escort = storage.escort or {boats = {}, targets = {}}
   storage.scan_state = storage.scan_state or {surface_index = 1, deep_counter = 0}
+  storage.pending_rescans = storage.pending_rescans or {}
 end
 
 local function register_ships()
@@ -154,10 +157,11 @@ local function register_ships()
       engine_scale = 1,
       engine_at_front = false,
     })
-    -- Independent battleship: do NOT tie it to a rail ship variant.
-    -- If `rail_version` is set, cargo-ships may enforce placement on ship-rails.
     remote.call("cargo-ships", "add_boat", {
       name = INDEP_BATTLESHIP_NAME,
+      -- Match patrol-boat behavior: when built on waterway, spawn rail ship;
+      -- when built off waterway, keep freely-drivable independent variant.
+      rail_version = BATTLESHIP_NAME,
     })
     remote.call("cargo-ships", "add_ship", {
       name = PATROL_BOAT_NAME,
@@ -175,6 +179,8 @@ end
 local init_existing
 local fallback_scan_step
 local is_stopped
+local queue_conversion_rescans
+local process_pending_rescans
 
 -- Post-load initialization: on_load cannot safely use game state for scanning.
 -- We schedule a one-time scan on the next tick after a save is loaded.
@@ -1015,6 +1021,7 @@ end
 
 local function on_nth_tick()
   ensure_globals()
+  process_pending_rescans()
 
   -- Fallback scan: cargo-ships/pelagos may create/replace ships via script without build events.
   -- Scan periodically to attach turrets to any missing ships.
@@ -1113,6 +1120,47 @@ local function on_nth_tick()
   end
 end
 
+queue_conversion_rescans = function(surface_index, position)
+  if not (surface_index and position) then
+    return
+  end
+  ensure_globals()
+  for _, delay in ipairs(CONVERSION_RESCAN_DELAYS) do
+    storage.pending_rescans[#storage.pending_rescans + 1] = {
+      due_tick = game.tick + delay,
+      surface_index = surface_index,
+      position = {x = position.x, y = position.y},
+    }
+  end
+end
+
+process_pending_rescans = function()
+  if not (storage.pending_rescans and #storage.pending_rescans > 0) then
+    return
+  end
+
+  local keep = {}
+  for i = 1, #storage.pending_rescans do
+    local job = storage.pending_rescans[i]
+    if job and job.due_tick and game.tick >= job.due_tick then
+      local surface = game.surfaces[job.surface_index]
+      if surface and surface.valid then
+        local area = {
+          {job.position.x - CONVERSION_RESCAN_RADIUS, job.position.y - CONVERSION_RESCAN_RADIUS},
+          {job.position.x + CONVERSION_RESCAN_RADIUS, job.position.y + CONVERSION_RESCAN_RADIUS},
+        }
+        local ships = surface.find_entities_filtered{area = area, name = {BATTLESHIP_NAME, PATROL_BOAT_NAME, INDEP_BATTLESHIP_NAME, INDEP_PATROL_BOAT_NAME}}
+        for _, ship in pairs(ships) do
+          ensure_entry(ship)
+        end
+      end
+    else
+      keep[#keep + 1] = job
+    end
+  end
+  storage.pending_rescans = keep
+end
+
 local function on_built(event)
   dbg("[Battleship] on_built fired", event.player_index)
   local entity = event.entity or event.destination
@@ -1121,6 +1169,10 @@ local function on_built(event)
   end
   if entity and entity.valid and is_ship_name(entity.name) then
     ensure_entry(entity)
+
+    -- Build-time replacement/finalization can make first turret placement fail
+    -- transiently (especially on waterways). Always queue local retries.
+    queue_conversion_rescans(entity.surface.index, entity.position)
   end
 end
 
