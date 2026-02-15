@@ -1170,11 +1170,9 @@ local function on_built(event)
   if entity and entity.valid and is_ship_name(entity.name) then
     ensure_entry(entity)
 
-    -- cargo-ships may immediately replace indep boats with rail variants on waterways
-    -- without always raising a second build event; rescan nearby shortly after build.
-    if entity.name == INDEP_BATTLESHIP_NAME or entity.name == INDEP_PATROL_BOAT_NAME then
-      queue_conversion_rescans(entity.surface.index, entity.position)
-    end
+    -- Build-time replacement/finalization can make first turret placement fail
+    -- transiently (especially on waterways). Always queue local retries.
+    queue_conversion_rescans(entity.surface.index, entity.position)
   end
 end
 
