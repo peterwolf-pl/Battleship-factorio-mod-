@@ -154,10 +154,11 @@ local function register_ships()
       engine_scale = 1,
       engine_at_front = false,
     })
-    -- Independent battleship: do NOT tie it to a rail ship variant.
-    -- If `rail_version` is set, cargo-ships may enforce placement on ship-rails.
     remote.call("cargo-ships", "add_boat", {
       name = INDEP_BATTLESHIP_NAME,
+      -- Match patrol-boat behavior: when built on waterway, spawn rail ship;
+      -- when built off waterway, keep freely-drivable independent variant.
+      rail_version = BATTLESHIP_NAME,
     })
     remote.call("cargo-ships", "add_ship", {
       name = PATROL_BOAT_NAME,
