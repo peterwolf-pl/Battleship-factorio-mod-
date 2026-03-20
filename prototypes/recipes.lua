@@ -28,5 +28,21 @@ data:extend{
       {type="item", name="rocket-launcher", amount=1}
     },
     results = {{type="item", name="patrol-boat", amount=1}}
+  },
+  {
+    type = "recipe",
+    name = "aircraft-carrier",
+    enabled = false,
+    energy_required = 25,
+    ingredients = {
+      {type="item", name="steel-plate", amount=400},
+      {type="item", name="engine-unit", amount=180},
+      {type="item", name="iron-gear-wheel", amount=190},
+      {type="item", name="electronic-circuit", amount=40},
+      {type="item", name="explosives", amount=50},
+      {type="item", name="roboport", amount=2},
+      {type="item", name="long-range-delivery-drone-request-depot", amount=1}
+    },
+    results = {{type="item", name="aircraft-carrier", amount=1}}
   }
 }

@@ -1,6 +1,145 @@
+Version: 0.3.30
+Date: 2026-03-15
+  Fixes:
+    - Fixed the patrol-boat cargo-wagon prototype crash in Factorio 2.0 by collapsing rotated sprite layers to a single validated visible layer after graphics patching.
+    - Kept the remaining rotated layer direction_count explicit and normalized so the prototype no longer fails with "Layers of rotated sprite need to have equal direction_count".
+
+---------------------------------------------------------------------------------------------------
+Version: 0.3.29
+Date: 2026-03-15
+  Fix: define rotated-layer direction-count normalizer at file scope so patrol boat graphics patching does not crash during data stage.
+
+---------------------------------------------------------------------------------------------------
+Version: 0.3.29
+Date: 2026-03-15
+  Fixes:
+    - Fixed patrol boat cargo-wagon rotated sprite layers so every layer uses the same direction_count.
+    - Normalized copied and stripped patrol boat rotated layers after applying custom graphics to prevent prototype load failure.
+
+---------------------------------------------------------------------------------------------------
+Version: 0.3.28
+Date: 2026-03-15
+  Fixes:
+    - Fixed patrol boat prototype load error caused by mismatched animation layer max_advance values.
+    - Kept stripped patrol boat overlay layers animation metadata in sync to prevent duplicate ghost rendering after entering the vehicle.
+
+---------------------------------------------------------------------------------------------------
+Version: 0.3.27
+Date: 15. 03. 2026
+  Bugfixes:
+    - Fixed Patrol Boat custom graphics duplicating visible animation layers after entering the vehicle.
+    - Cleared inherited tint/mask-style overlay state from Patrol Boat custom sprites to stop the semi-transparent ghost split.
+
+---------------------------------------------------------------------------------------------------
+Version: 0.3.27
+Date: 14. 03. 2026
+  Bugfixes:
+    - Fixed Aircraft Carrier hidden power pole startup compatibility when another mod adds a substation upgrade chain.
+    - Cleared inherited upgrade metadata from the hidden carrier power pole so Factorio 2.0 no longer rejects it as non-minable.
+
+---------------------------------------------------------------------------------------------------
+Version: 0.3.25
+Date: 12. 03. 2026
+  Features:
+    - Added the Aircraft Carrier ship type with two mounted roboports and a long-range delivery landing pad.
+    - Aircraft Carrier roboports now draw power from ship fuel even while the ship is stationary.
+    - Increased Aircraft Carrier roboport range to 10x vanilla and moved the two roboports into a forward inline deck layout.
+    - Aircraft Carrier deck attachments now use visual proxies drawn above the hull so roboports and the landing pad stay visible in every ship orientation.
+    - Increased Aircraft Carrier roboport charging throughput, expanded onboard roboport battery capacity, and added exhaust smoke while the ship is generating electric power.
+    - Improved Aircraft Carrier generator fuel efficiency by 10x and restricted electric generation fuel draw to the ship engine burner inventory instead of the cargo hold.
+  Compatibility:
+    - Added a hard dependency on Long range delivery drones (fork) and expect the fork patch that tracks moving carrier landing pads via live entity positions.
+
+---------------------------------------------------------------------------------------------------
+Version: 0.3.24
+Date: 01. 03. 2026
+  Bugfixes:
+    - Fixed patrol boat rail variant graphics setup so the waterway cargo-wagon now uses a valid rotated sprite definition derived from the independent boat.
+    - Hid the Patrol Boat missile turret more completely by stripping additional Factorio 2.0 turret render fields (`folding_animation`, `graphics_set`, `water_reflection`).
+  Improvements:
+    - Patrol Boat placed on waterways now matches the independent Patrol Boat visual style more closely.
+
+---------------------------------------------------------------------------------------------------
+Version: 0.3.23
+Date: 26. 02. 2026
+  Bugfixes:
+    - Fixed accidental global `is_stopped` function declaration in runtime control logic.
+  Improvements:
+    - Reduced patrol turret runtime sync work by skipping position/direction resync when the patrol boat has not moved.
+    - Throttled patrol turret force resync similarly to battleship turrets to lower per-tick overhead.
+
+---------------------------------------------------------------------------------------------------
+Version: 0.3.22
+Date: 25. 02. 2026
+  Improvements:
+    - Reduced Patrol Boat escort movement step size to smooth out visible teleport jumps.
+    - Heavy escort loop no longer directly moves escort boats; movement is handled by the per-tick visual escort step.
+    - Kept heavy escort loop for avoidance calculations and cached offsets only.
+
+---------------------------------------------------------------------------------------------------
+Version: 0.3.21
+Date: 25. 02. 2026
+  Improvements:
+    - Patrol Boat escort movement now performs a light follow step every tick for smoother motion behind Battleships.
+    - Heavy escort logic (avoidance/path decisions) remains throttled; avoidance vector is cached and reused between updates.
+    - Avoided double movement on heavy escort ticks by skipping visual escort step on those ticks.
+
+---------------------------------------------------------------------------------------------------
+Version: 0.3.20
+Date: 25. 02. 2026
+  Improvements:
+    - Applied runtime rendering proxy visuals to Patrol Boat missile turret (smooth attachment during movement).
+    - Moved Patrol Boat turret sync to the visual tick loop (every tick) while keeping ammo/radar logic throttled.
+    - Added Patrol Boat proxy cleanup on destroy/invalid entity paths.
+
+---------------------------------------------------------------------------------------------------
+Version: 0.3.19
+Date: 25. 02. 2026
+  Improvements:
+    - Replaced visible Battleship artillery entities with a runtime rendering proxy (smooth visual attachment during movement).
+    - Real artillery turrets remain active as hidden logic entities (ammo, targeting, firing behavior preserved).
+    - Added defensive rendering API fallbacks to avoid crashes on incompatible setups.
+
+---------------------------------------------------------------------------------------------------
+Version: 0.3.18
+Date: 25. 02. 2026
+  Improvements:
+    - Split Battleship turret visual sync from heavy maintenance logic: turret attachment now updates every tick, while maintenance stays throttled.
+    - Improved Battleship artillery turret attachment smoothness on cargo ships by syncing to sub-tile positions at runtime.
+    - Added safe fallback to 0.5-tile snapping when a surface/entity refuses exact teleport (compatibility mode).
+    - Battleship artillery turrets now attempt to sync direction with ship turns for better visual alignment.
+
+---------------------------------------------------------------------------------------------------
+Version: 0.3.17
+Date: 21. 02. 2026
+  Improvements:
+    - Switched tuning settings from runtime-per-user to runtime-global (per map).
+    - Added map-wide tuning cache in control.lua for lower runtime overhead.
+  Bugfixes:
+    - Hardened cargo-ships remote interface registration (safe add_ship/add_boat checks).
+    - Fixed undefined player fallback in patrol escort assignment path.
+    - Stopped mutating base cargo_ship prototype when tinting independent battleship visuals.
+    - Added missing English locale entries for battleship-debug-global.
+
+---------------------------------------------------------------------------------------------------
+Version: 0.3.16
+Date: 20. 02. 2026
+  Features:
+    - Added runtime-per-user tuning settings for patrol follow, escort behavior, ammo refill, radar charting, and force sync.
+  Bugfixes:
+    - Applied tick-based throttling for ammo refills and escort updates (configurable per player).
+
+---------------------------------------------------------------------------------------------------
+Version: 0.3.15
+Date: 15. 02. 2026
+  Bugfixes:
+    - game lagging fixes
+  Graphics:
+    - battleship tint 
+
 ---------------------------------------------------------------------------------------------------
 Version: 0.3.14
-Date: 09. 02. 2026
+Date: 14. 02. 2026
   Bugfixes:
     - turret is now minable for bob's mods 
 
@@ -9,8 +148,6 @@ Version: 0.3.13
 Date: 09. 02. 2026
   Bugfixes:
     - battleship graphics fixes 
-  
-
 
 ---------------------------------------------------------------------------------------------------
 Version: 0.3.12
@@ -18,8 +155,6 @@ Date: 07. 02. 2026
   Bugfixes:
     - patrol_boat graphics fixes 
     - Patrol boat missile turret is now fully invisible (graphics stripped) for all variants, including waterways.
-
-
 
 ---------------------------------------------------------------------------------------------------
 Version: 0.3.11

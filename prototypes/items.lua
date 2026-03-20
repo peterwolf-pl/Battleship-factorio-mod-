@@ -29,6 +29,34 @@ data:extend{
   },
   {
     type = "item-with-entity-data",
+    name = "aircraft-carrier",
+    icons = {
+      {
+        icon = GRAPHICSPATH .. "icons/cargoship_icon.png",
+        icon_size = 64,
+        tint = {0.75, 0.9, 1}
+      },
+      {
+        icon = "__base__/graphics/icons/roboport.png",
+        icon_size = 64,
+        scale = 0.5,
+        shift = {8, 6}
+      },
+      {
+        icon = "__long_range_delivery_drones_peterwolf_fork__/data/long-range-delivery-drone/request-depot-icon.png",
+        icon_size = 64,
+        scale = 0.28,
+        shift = {-9, 10}
+      }
+    },
+    subgroup = subgroup_ship,
+    order = "a[water-system]-h[aircraft-carrier]",
+    place_result = "indep-aircraft-carrier",
+    placeable_by = {{item = "aircraft-carrier", count = 1}},
+    stack_size = 1
+  },
+  {
+    type = "item-with-entity-data",
     name = "patrol-boat",
     icons = {
       {

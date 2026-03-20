@@ -1,26 +1,32 @@
+-- __Battleship__/settings.lua
+-- Factorio 2.0
+
 data:extend({
-  {
+  -- Debug
   {
     type = "bool-setting",
     name = "battleship-debug",
-    setting_type = "runtime-per-user",
+    setting_type = "runtime-global",
     default_value = false,
-    order = "a"
+    order = "a[debug]-a[global]",
   },
   {
     type = "bool-setting",
     name = "battleship-debug-global",
     setting_type = "runtime-global",
     default_value = false,
-    order = "b"
+    order = "a[debug]-b[global]",
   },
+
+  -- Startup tuning
+  {
     type = "double-setting",
     name = "battleship-speed-multiplier",
     setting_type = "startup",
     default_value = 1,
     minimum_value = 0.1,
     maximum_value = 5,
-    order = "a[battleship]-a[speed]",
+    order = "b[startup]-a[battleship-speed]",
   },
   {
     type = "double-setting",
@@ -29,7 +35,7 @@ data:extend({
     default_value = 1,
     minimum_value = 0.1,
     maximum_value = 5,
-    order = "b[patrol-boat]-a[speed]",
+    order = "b[startup]-b[patrol-speed]",
   },
   {
     type = "double-setting",
@@ -38,8 +44,10 @@ data:extend({
     default_value = 3,
     minimum_value = 0.1,
     maximum_value = 10,
-    order = "b[patrol-boat]-b[missile-range]",
+    order = "b[startup]-c[patrol-missile-range]",
   },
+
+  -- Global radar ranges (per map)
   {
     type = "double-setting",
     name = "battleship-radar-range",
@@ -47,7 +55,7 @@ data:extend({
     default_value = 333,
     minimum_value = 0,
     maximum_value = 1000,
-    order = "a[battleship]-b[radar-range]",
+    order = "c[radar]-a[battleship-range]",
   },
   {
     type = "double-setting",
@@ -56,6 +64,110 @@ data:extend({
     default_value = 333,
     minimum_value = 0,
     maximum_value = 1000,
-    order = "b[patrol-boat]-c[radar-range]",
+    order = "c[radar]-b[patrol-range]",
+  },
+
+  -- Runtime-global tuning (per map)
+  {
+    type = "double-setting",
+    name = "battleship-patrol-follow-min-distance",
+    setting_type = "runtime-global",
+    default_value = 10,
+    minimum_value = 0,
+    maximum_value = 200,
+    order = "d[global]-a[patrol-follow]-a[min-distance]",
+  },
+  {
+    type = "double-setting",
+    name = "battleship-patrol-follow-max-distance",
+    setting_type = "runtime-global",
+    default_value = 30,
+    minimum_value = 0,
+    maximum_value = 400,
+    order = "d[global]-a[patrol-follow]-b[max-distance]",
+  },
+  {
+    type = "double-setting",
+    name = "battleship-patrol-follow-step",
+    setting_type = "runtime-global",
+    default_value = 0.6,
+    minimum_value = 0.01,
+    maximum_value = 10,
+    order = "d[global]-a[patrol-follow]-c[step]",
+  },
+
+  {
+    type = "int-setting",
+    name = "battleship-escort-update-ticks",
+    setting_type = "runtime-global",
+    default_value = 15,
+    minimum_value = 1,
+    maximum_value = 600,
+    order = "d[global]-b[escort]-a[update-ticks]",
+  },
+  {
+    type = "double-setting",
+    name = "battleship-escort-min-separation-tiles",
+    setting_type = "runtime-global",
+    default_value = 9,
+    minimum_value = 0,
+    maximum_value = 100,
+    order = "d[global]-b[escort]-b[min-separation]",
+  },
+  {
+    type = "double-setting",
+    name = "battleship-escort-avoid-strength",
+    setting_type = "runtime-global",
+    default_value = 2.5,
+    minimum_value = 0,
+    maximum_value = 20,
+    order = "d[global]-b[escort]-c[avoid-strength]",
+  },
+
+  {
+    type = "int-setting",
+    name = "battleship-ammo-refill-ticks",
+    setting_type = "runtime-global",
+    default_value = 60,
+    minimum_value = 1,
+    maximum_value = 3600,
+    order = "d[global]-c[maintenance]-a[battleship-ammo-refill]",
+  },
+  {
+    type = "int-setting",
+    name = "patrol-boat-ammo-refill-ticks",
+    setting_type = "runtime-global",
+    default_value = 30,
+    minimum_value = 1,
+    maximum_value = 3600,
+    order = "d[global]-c[maintenance]-b[patrol-ammo-refill]",
+  },
+
+  {
+    type = "int-setting",
+    name = "battleship-radar-chart-ticks",
+    setting_type = "runtime-global",
+    default_value = 180,
+    minimum_value = 1,
+    maximum_value = 3600,
+    order = "d[global]-d[radar]-a[chart-ticks]",
+  },
+  {
+    type = "double-setting",
+    name = "battleship-radar-min-move-for-rechart",
+    setting_type = "runtime-global",
+    default_value = 4,
+    minimum_value = 0,
+    maximum_value = 200,
+    order = "d[global]-d[radar]-b[min-move]",
+  },
+  {
+    type = "int-setting",
+    name = "battleship-force-sync-ticks",
+    setting_type = "runtime-global",
+    default_value = 300,
+    minimum_value = 1,
+    maximum_value = 3600,
+    order = "d[global]-e[misc]-a[force-sync]",
   },
 })

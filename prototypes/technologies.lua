@@ -44,5 +44,34 @@ data:extend{
       time = 30
     },
     order = "c-g-a"
+  },
+  {
+    type = "technology",
+    name = "aircraft-carrier",
+    icon = GRAPHICSPATH .. "technology/cargo_ships.png",
+    icon_size = 256,
+    localised_name = {"entity-name.aircraft-carrier"},
+    localised_description = {"entity-description.aircraft-carrier"},
+    effects = {
+      unlock("aircraft-carrier")
+    },
+    prerequisites = {
+      "battleship",
+      "cargo_ships",
+      "long-range-delivery-drone",
+      "logistic-robotics",
+      "construction-robotics"
+    },
+    unit = {
+      count = 300,
+      ingredients = {
+        {"automation-science-pack", 1},
+        {"logistic-science-pack", 1},
+        {"military-science-pack", 1},
+        {"chemical-science-pack", 1}
+      },
+      time = 30
+    },
+    order = "c-g-b"
   }
 }
